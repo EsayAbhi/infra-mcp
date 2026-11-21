@@ -1,0 +1,17 @@
+# Demo config for testing with the fake servers (tests/mock/redfish_mock.py). Safe: read-only.
+read_only: true
+audit_log: audit.jsonl
+connectors:
+  network:
+    enabled: true
+  redfish:
+    enabled: true
+    username: admin
+    password: admin
+    hosts:
+      - name: good-server
+        url: http://127.0.0.1:8001
+      - name: bad-server
+        url: http://127.0.0.1:8002
+      - name: offline-server
+        url: http://127.0.0.1:8009

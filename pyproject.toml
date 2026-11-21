@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "infra-mcp"
+version = "0.1.0"
+description = "Modular, read-only-by-default MCP server for infrastructure and IT tools (VMware, Windows, Prometheus, any REST API)."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = ["mcp>=1.2.0", "requests>=2.31", "pyyaml>=6.0", "pyvmomi>=8.0.1"]
+
+[project.optional-dependencies]
+windows = ["pywinrm>=0.4.3"]
+dev = ["pytest>=8"]
+
+[project.scripts]
+infra-mcp = "infra_mcp.server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

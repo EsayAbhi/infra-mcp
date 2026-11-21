@@ -1,0 +1,25 @@
+read_only: true
+audit_log: audit.jsonl
+connectors:
+  network:
+    enabled: true
+  redfish:
+    enabled: true
+    username: admin
+    password: admin
+    hosts:
+      - name: good-server
+        url: http://127.0.0.1:8001
+      - name: bad-server
+        url: http://127.0.0.1:8002
+      - name: offline-server
+        url: http://127.0.0.1:8009
+  vmware:
+    enabled: true
+    mode: soap
+    host: 127.0.0.1
+    port: 8989
+    username: user
+    password: pass
+    verify_ssl: false
+    snapshot_warn_days: 0     # demo only: flag even brand-new snapshots

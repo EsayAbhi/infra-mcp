@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+# NEVER commit client secrets or logs
+config.yaml
+.env
+*.log
+audit.jsonl
+config.mail-test.yaml
+config.vcsim.yaml
+report.md

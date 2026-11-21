@@ -1,0 +1,99 @@
+# Copy to config.yaml and edit. Values like ${VAR} are read from environment / .env
+# Everything is READ-ONLY unless you change read_only to false.
+
+read_only: true              # master safety switch: blocks every write/change action
+audit_log: audit.jsonl       # every tool call is logged here (secrets are redacted)
+
+connectors:
+
+  network:                   # no credentials needed, works anywhere
+    enabled: true
+    allowed_hosts: []        # e.g. ["*.corp.local", "10.0.*"]; empty = allow all
+    watch_tls: []            # certificates to include in the daily report, e.g. ["vcenter.corp.local:443"]
+    tls_warn_days: 30
+    tls_critical_days: 7
+
+  redfish:                   # hardware health of physical servers via their BMC (iDRAC, iLO, CIMC, XCC)
+    enabled: false
+    username: ${BMC_USER}
+    password: ${BMC_PASSWORD}
+    verify_ssl: false        # BMCs usually have self-signed certificates
+    hosts:                   # your named servers (use a read-only BMC account)
+      - name: esx01-idrac
+        url: https://10.0.0.11
+      - name: esx02-idrac
+        url: https://10.0.0.12
+    allowed_hosts: []        # optional: allow ad-hoc addresses matching e.g. ["10.0.0.*"]
+
+  vmware:                    # vCenter or standalone ESXi
+    enabled: false
+    mode: soap               # soap (recommended: everything incl. snapshots, alarms, host sensors) | rest
+    host: ${VCENTER_HOST}
+    port: 443
+    username: ${VCENTER_USER}
+    password: ${VCENTER_PASSWORD}
+    verify_ssl: true         # set false only for lab/self-signed certs
+    # thresholds for the daily report (these are the defaults):
+    datastore_warn_percent: 15
+    datastore_critical_percent: 5
+    snapshot_warn_days: 3
+    snapshot_critical_days: 14
+    host_usage_warn_percent: 90
+
+  report:                    # daily health report (always available; email is optional)
+    smtp:
+      host: smtp.example.com
+      port: 587
+      starttls: true
+      username: ${SMTP_USER}
+      password: ${SMTP_PASSWORD}
+      from: infra-mcp@example.com
+      to: [ops@example.com]
+
+  prometheus:                # also works with Grafana Mimir / VictoriaMetrics
+    enabled: false
+    url: ${PROMETHEUS_URL}
+    # bearer_token: ${PROM_TOKEN}
+    # username: user
+    # password: pass
+    verify_ssl: true
+
+  grafana:                   # find dashboards, create or import dashboards (no SQL / PromQL knowledge needed)
+    enabled: false
+    url: ${GRAFANA_URL}            # e.g. https://grafana.example.com
+    api_token: ${GRAFANA_TOKEN}    # Grafana > Administration > Service accounts (Editor role to create)
+    verify_ssl: true
+
+  windows:                   # needs: pip install "infra-mcp[windows]"
+    enabled: false
+    username: ${WINRM_USER}
+    password: ${WINRM_PASSWORD}
+    transport: ntlm          # ntlm | kerberos | basic | credssp
+    use_ssl: false           # true = HTTPS 5986
+    verify_ssl: true
+    allowed_hosts: []        # strongly recommended: ["*.corp.local"]
+    allow_custom_command: false   # also requires read_only: false
+
+  rest:                      # connect ANY tool with a REST API, no code needed
+    enabled: false
+    services:
+      servicenow:
+        base_url: https://yourinstance.service-now.com
+        auth:                    # type: bearer | basic | header | none
+          type: bearer
+          token: ${SERVICENOW_TOKEN}
+        verify_ssl: true
+        endpoints:
+          - name: list_incidents
+            method: GET
+            path: /api/now/table/incident
+            description: List incidents (use params sysparm_limit, sysparm_query)
+          - name: get_incident
+            method: GET
+            path: /api/now/table/incident/{sys_id}
+            description: Get one incident by sys_id
+          - name: create_incident
+            method: POST
+            path: /api/now/table/incident
+            write: true          # blocked while read_only: true
+            description: Create an incident (body fields e.g. short_description)
